@@ -21,6 +21,6 @@
     "ENV RACK_ENV production",
     "EXPOSE 80",
     "CMD [\"rackup\", \"config.ru\", \"--host\", \"0.0.0.0\", \"--port\", \"80\"]",
-    "RUN bin/run locations --profile_dir=chrome_1 --log_level=DEBUG"
+    "RUN /usr/src/app/bin/run locations --profile_dir=chrome_1 --log_level=DEBUG"
   ]
 }
