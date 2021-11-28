@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "dockerfileLines": [
+    "FROM library/ruby:2.7.1-alpine",
+    "RUN apk --update add make g++",
+    "RUN apk update && apk add git",
+    "RUN sudo apt-get install libmysqlclient-dev",
+    "RUN sudo apt-get install chromium-chromedriver",
+    "RUN mkdir -p /usr/src/app",
+    "WORKDIR /usr/src/app",
+    "COPY ./src/Gemfile /usr/src/app/",
+    "RUN bundle install",
+    "COPY ./src /usr/src/app",
+    "ENV RACK_ENV production",
+    "EXPOSE 80",
+    "CMD [\"rackup\", \"config.ru\", \"--host\", \"0.0.0.0\", \"--port\", \"80\"]"
+  ]
+}
