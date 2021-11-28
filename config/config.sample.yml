@@ -1,0 +1,15 @@
+web_browser:
+  type: 'chrome'
+  headless: false
+  window_width: 1324
+  window_height: 960
+  disable_images: false
+db:
+  host: '127.0.0.1'
+  port: '3306'
+  name: ''
+  user: ''
+  passwd: ''
+insta_account:
+  login:
+  password:

@@ -1,0 +1,35 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    childprocess (4.1.0)
+    closed_struct (1.0.0)
+    mini_portile2 (2.6.1)
+    mysql2 (0.5.3)
+    nokogiri (1.12.5)
+      mini_portile2 (~> 2.6.1)
+      racc (~> 1.4)
+    nokogumbo (2.0.5)
+      nokogiri (~> 1.8, >= 1.8.4)
+    racc (1.6.0)
+    rexml (3.2.5)
+    rubyzip (2.3.2)
+    selenium-webdriver (4.1.0)
+      childprocess (>= 0.5, < 5.0)
+      rexml (~> 3.2, >= 3.2.5)
+      rubyzip (>= 1.2.2)
+    sequel (5.50.0)
+    thor (1.1.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  closed_struct
+  mysql2
+  nokogumbo
+  selenium-webdriver
+  sequel
+  thor
+
+BUNDLED WITH
+   2.1.4

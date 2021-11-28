@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+$:.unshift(File.expand_path('../../lib', __FILE__))
+
+require 'thor'
+require 'spider'
+
+class App < Thor
+	class_option :log_level, type: :string, default: "ERROR"
+
+	desc 'locations', 'Executes locations crowler'
+	method_option :profile_dir, type: :string
+	def locations
+		Spider::LocationsCrowler.run(log_level: options[:log_level], profile_dir: options[:profile_dir])
+	end
+end
+
+App.start
