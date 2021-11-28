@@ -5,11 +5,11 @@ web_browser:
   window_height: 960
   disable_images: false
 db:
-  host: '127.0.0.1'
+  host: '185.253.219.150'
   port: '3306'
-  name: ''
-  user: ''
-  passwd: ''
+  name: 'insta'
+  user: 'root'
+  passwd: 'HblVQ$z*6efI'
 insta_account:
-  login:
-  password:
+  login: 'maxbardks43'
+  password: '112233ale'
