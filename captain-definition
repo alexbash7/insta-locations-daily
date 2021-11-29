@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 2,
+  "dockerfileLines": [
+    "FROM library/ruby:2.6.5",
+    "RUN apt-get update",
+    "RUN apt-get install git",
+    "RUN apt -y update",
+    "RUN apt-get install default-libmysqlclient-dev",
+    "RUN wget https://chromedriver.storage.googleapis.com/96.0.4664.45/chromedriver_linux64.zip",
+    "RUN unzip chromedriver_linux64.zip",
+    "RUN mv chromedriver /usr/bin/chromedriver",
+    "RUN chmod +x /usr/bin/chromedriver",
+    "RUN mkdir -p /usr/src/app",
+    "WORKDIR /usr/src/app",
+    "RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -",
+    "RUN echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' >> /etc/apt/sources.list.d/google.list",
+    "RUN apt-get update && apt-get install -y google-chrome-stable",
+    "COPY Gemfile /usr/src/app/",
+    "RUN bundle install",
+    "COPY ./ /usr/src/app",
+    "ENV RACK_ENV production",
+    "EXPOSE 80",
+    "CMD [\"rackup\", \"config.ru\", \"--host\", \"0.0.0.0\", \"--port\", \"80\"]",
+    "RUN bin/run locations --profile_dir=chrome_1 --log_level=DEBUG"
+  ]
+}
