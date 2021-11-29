@@ -1,6 +1,6 @@
 web_browser:
   type: 'chrome'
-  headless: false
+  headless: true
   window_width: 1324
   window_height: 960
   disable_images: false
