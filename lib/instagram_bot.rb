@@ -2,7 +2,7 @@ require 'date'
 
 module Spider
 	module InstagramBot
-		POSTS_PERIOD_MINUTES = 1
+		POSTS_PERIOD_MINUTES = 30
 		def self.set_logger logger
 			@@logger = logger
 		end
@@ -18,7 +18,6 @@ module Spider
 		def self.login username, pass
 			Spider::WebBrowser.get_driver.navigate.to "https://www.instagram.com/accounts/login/"
 			sleep 3
-			Spider::WebBrowser.get_driver.save_screenshot "login_before.png"
 			username_el = Spider::WebBrowser.get_driver.find_element(:css => "input[name='username']") rescue nil
 			if username_el.nil?
 				click_not_now_notifications
@@ -29,7 +28,6 @@ module Spider
 			password_el = Spider::WebBrowser.get_driver.find_element(:css => "input[name='password']")
 			password_el.click
 			password_el.send_keys pass
-			Spider::WebBrowser.get_driver.save_screenshot "login_sendpass.png"
 			
 			btn_submit =  Spider::WebBrowser.get_driver.find_element(:xpath, '//*[text()="Log In"]')
 			btn_submit.click
@@ -58,19 +56,11 @@ module Spider
 			seconds_diff = ((DateTime.now - post_time) * 24 * 60 * 60).to_i
 			@@logger.debug "minutes diff = #{seconds_diff / 60 }"
 			if seconds_diff < 60 * POSTS_PERIOD_MINUTES
-				nick_el = Spider::WebBrowser.get_driver.find_element(:xpath, "//header//a")
-				begin
-				nick_href = nick_el.attribute("href")
-				rescue
-					sleep 1
-					begin
-						nick_el = Spider::WebBrowser.get_driver.find_element(:xpath, "//header//a")
-						nick_href = nick_el.attribute("href")
-					rescue
-						print 'Error on nick_href. Press button'
-					end
-				end
-				@@logger.debug  "nick_href = #{nick_href}"
+				page_html = Spider::WebBrowser.get_driver.page_source
+				matched = page_html.match(/window\.__additionalDataLoaded\('.+?\',(.+?)\);<\/script>/)
+				post_data = JSON.parse(matched[1])
+				user_id = post_data['graphql']['shortcode_media']['owner']['id']
+				@@logger.debug "user_id = #{user_id}"
 				img_src = nil
 				video = Spider::WebBrowser.get_driver.find_element(:xpath, "//article//video") rescue nil
 				if video
@@ -102,7 +92,7 @@ module Spider
 				@@logger.debug  "img_src = #{img_src}"
 				posts.push({
 					'img_url' => img_src,
-					'user_id' => nick_href,
+					'user_id' => user_id,
 					'post_url' => url,
 					'date' => post_time,
 				})
@@ -127,9 +117,14 @@ module Spider
 				end
 				urls = []
 				recent_posts.each do |_post_el|
-					a_el = _post_el.find_element(:xpath, './/a')
-					url = a_el.attribute('href')
-					urls.push url
+					begin
+						a_el = _post_el.find_element(:xpath, './/a')
+						url = a_el.attribute('href')
+						urls.push url
+					rescue
+						Spider::WebBrowser.get_driver.save_screenshot 'href_not_detected.png' rescue nil
+						@@logger.warn "href not detected in the post list"
+					end
 					# close_el = Spider::WebBrowser.get_driver.find_element(:xpath, "//*[contains(@aria-label, 'Close')]")
 					# close_el.click
 				end
@@ -152,7 +147,7 @@ module Spider
 					end
 					sleep 1
 					Spider::WebBrowser.get_driver.execute_script("window.scrollTo(0, document.documentElement.scrollHeight);")
-					sleep 3
+					sleep 4
 				end
 			end
 			posts
