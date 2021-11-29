@@ -1,4 +1,4 @@
-require 'Date'
+require 'date'
 
 module Spider
 	module InstagramBot
