@@ -1,4 +1,2 @@
 *DS_Store
 config/config.yml
-browser_profiles/*
-!/browser_profiles/.gitkeep

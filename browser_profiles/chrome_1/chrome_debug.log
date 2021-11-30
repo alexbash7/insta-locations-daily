@@ -1,0 +1,15 @@
+[51767:259:1130/224454.411638:INFO:CONSOLE(4)] "ErrorUtils caught an error:
+
+followedByViewer state must be defined
+
+Subsequent non-fatal errors won't be logged; see https://fburl.com/debugjs.", source: https://www.instagram.com/static/bundles/es6/ConsumerLibCommons.js/f1ccaccbcdba.js (4)
+[51767:34051:1130/224457.288740:ERROR:chrome_browser_main_extra_parts_metrics.cc(226)] crbug.com/1216328: Checking Bluetooth availability started. Please report if there is no report that this ends.
+[51767:34051:1130/224457.292132:ERROR:chrome_browser_main_extra_parts_metrics.cc(229)] crbug.com/1216328: Checking Bluetooth availability ended.
+[51767:34051:1130/224457.292170:ERROR:chrome_browser_main_extra_parts_metrics.cc(232)] crbug.com/1216328: Checking default browser status started. Please report if there is no report that this ends.
+[51767:34051:1130/224457.292704:ERROR:chrome_browser_main_extra_parts_metrics.cc(236)] crbug.com/1216328: Checking default browser status ended.
+[51767:259:1130/224513.136159:ERROR:gpu_process_host.cc(967)] GPU process exited unexpectedly: exit_code=15
+[51767:259:1130/224513.136227:WARNING:gpu_process_host.cc(1273)] The GPU process has crashed 1 time(s)
+[51767:259:1130/224513.149711:WARNING:sad_tab.cc(295)] Tab Killed: https://www.instagram.com/
+[51767:259:1130/224513.157523:ERROR:network_service_instance_impl.cc(916)] Network service crashed, restarting service.
+[51767:259:1130/224513.167353:WARNING:sad_tab.cc(295)] Tab Killed: https://www.instagram.com/
+[51767:259:1130/224513.438890:WARNING:pref_notifier_impl.cc(40)] Pref observer for media_router.cast_allow_all_ips found at shutdown.

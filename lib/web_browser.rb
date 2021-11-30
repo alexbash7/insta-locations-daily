@@ -40,6 +40,7 @@ module Spider
 				when 'chrome'
 					options = Selenium::WebDriver::Chrome::Options.new
 					options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36")
+					p @@profile_dir
 					if @@profile_dir
 						options.add_argument("--user-data-dir=#{get_profile_dir_path}")
 					end

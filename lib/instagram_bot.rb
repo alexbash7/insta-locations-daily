@@ -2,7 +2,7 @@ require 'date'
 
 module Spider
 	module InstagramBot
-		POSTS_PERIOD_MINUTES = 30
+		POSTS_PERIOD_MINUTES = 60
 		def self.set_logger logger
 			@@logger = logger
 		end
@@ -92,7 +92,6 @@ module Spider
 								img_el = Spider::WebBrowser.get_driver.find_element(:xpath, "//article//ul//img") rescue nil
 								img_src = img_el.attribute("src")
 							rescue
-								Spider::WebBrowser.get_driver.save_screenshot 'src-error.png'
 								print 'Error on img_src. Press button'
 							end
 						end
@@ -119,6 +118,7 @@ module Spider
 
 		def self.get_location_posts url
 			posts = []
+			@@logger.debug "try to load location #{url}"
 			Spider::WebBrowser.get_driver.navigate.to url
 			sleep 3
 			rec_post_selector = "//h2[contains(@class, 'yQ0j1')]/following-sibling::div/div/div/div"
@@ -136,7 +136,6 @@ module Spider
 						url = a_el.attribute('href')
 						urls.push url
 					rescue
-						Spider::WebBrowser.get_driver.save_screenshot 'href_not_detected.png' rescue nil
 						@@logger.warn "href not detected in the post list"
 					end
 					# close_el = Spider::WebBrowser.get_driver.find_element(:xpath, "//*[contains(@aria-label, 'Close')]")

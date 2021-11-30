@@ -24,7 +24,12 @@ module Spider
 			config = Spider::Config.get_config
 			Spider::InstagramBot.login config.insta_account['login'], config.insta_account['password']
 			while true
-				no_parse_locations = Spider::DB.get_db[:locations_daily].where(:is_parse => 0).all
+				begin
+					no_parse_locations = Spider::DB.get_db[:locations_daily].where(:is_parse => 0).all
+				rescue Sequel::DatabaseDisconnectError
+					Spider::DB.disconnect
+					no_parse_locations = Spider::DB.get_db[:locations_daily].where(:is_parse => 0).all
+				end
 				no_parse_locations.each do |location_row|
 					logger.debug location_row
 					posts = Spider::InstagramBot.get_location_posts location_row[:url]
