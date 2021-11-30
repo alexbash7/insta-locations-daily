@@ -29,13 +29,14 @@ module Spider
 			password_el.click
 			password_el.send_keys pass
 			
-			btn_submit =  Spider::WebBrowser.get_driver.find_element(:xpath, '//*[text()="Log In"]')
+			btn_submit =  Spider::WebBrowser.get_driver.find_element(:css => "button[type='submit']")
 			btn_submit.click
-			sleep 2
+			sleep 10
 			click_not_now_notifications
 		end
 
 		def self.scrape_post_properties url, posts
+			@@logger.debug "try to load #{url}"
 			Spider::WebBrowser.get_driver.navigate.to url
 			time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
 			if time_el.nil?
@@ -58,8 +59,20 @@ module Spider
 			if seconds_diff < 60 * POSTS_PERIOD_MINUTES
 				page_html = Spider::WebBrowser.get_driver.page_source
 				matched = page_html.match(/window\.__additionalDataLoaded\('.+?\',(.+?)\);<\/script>/)
-				post_data = JSON.parse(matched[1])
-				user_id = post_data['graphql']['shortcode_media']['owner']['id']
+				if matched
+					post_data = JSON.parse(matched[1])
+					user_id = post_data['graphql']['shortcode_media']['owner']['id']
+				else
+					begin
+						matched = page_html.match(/window\._sharedData = (.+?)\);<\/script>/)
+						post_data = JSON.parse(matched[1])
+						user_id = post_data['graphql']['shortcode_media']['owner']['id']
+					rescue
+						@@logger.error "user_id not detected"
+						@@logger.debug page_html
+						return true
+					end
+				end
 				@@logger.debug "user_id = #{user_id}"
 				img_src = nil
 				video = Spider::WebBrowser.get_driver.find_element(:xpath, "//article//video") rescue nil
@@ -105,12 +118,11 @@ module Spider
 		def self.get_location_posts url
 			posts = []
 			Spider::WebBrowser.get_driver.navigate.to url
-			rec_post_selector = "//h2[contains(text(), 'Most Recent')]/following-sibling::div/div/div/div"
-			
+			sleep 3
+			rec_post_selector = "//h2[contains(@class, 'yQ0j1')]/following-sibling::div/div/div/div"
 			flag = true
 			while flag
 				recent_posts = Spider::WebBrowser.get_driver.find_elements(:xpath, rec_post_selector) rescue 0
-				css_sel = "article>div>div>div>div.kIKUG"
 				if recent_posts.count == 0
 					flag = false
 					next
@@ -131,15 +143,19 @@ module Spider
 				if Spider::WebBrowser.get_driver.window_handles.count == 1
 					Spider::WebBrowser.get_driver.execute_script( "window.open(); return true;" )
 					Spider::WebBrowser.get_driver.switch_to.window( Spider::WebBrowser.get_driver.window_handles.last )
+					sleep 2
 				else
 					Spider::WebBrowser.get_driver.switch_to.window( Spider::WebBrowser.get_driver.window_handles.last )
+					sleep 2
 				end
+				@@logger.debug  "#{urls.count} detected on page location"
 				urls.each do |url|
 					if flag
 						flag = scrape_post_properties url, posts
 					end
 				end
 				Spider::WebBrowser.get_driver.switch_to.window( Spider::WebBrowser.get_driver.window_handles.first )
+				sleep 2
 				if flag
 					sleep 1
 					Spider::WebBrowser.get_driver.find_elements(:xpath, rec_post_selector).each do |css_sel_el|

@@ -46,9 +46,11 @@ module Spider
 					options.add_argument("--proxy-server=#{@@proxy[:host]}:#{@@proxy[:port]}") if @@proxy
 					options.add_argument('--headless') if config.web_browser['headless']
 					options.add_argument("--window-size=#{config.web_browser['window_width']},#{config.web_browser['window_height']}")
+					options.add_argument('--disable-dev-shm-usage') if config.web_browser['disable-dev-shm-usage']
 					if config.web_browser['disable_images']
 						options.add_argument('--blink-settings=imagesEnabled=false')
 					end
+					options.add_argument('--no-sandbox') if config.web_browser['no-sandbox']
 					driver = Selenium::WebDriver.for :chrome, options: options
 				else
 				  Spider::ProjectLogger.get_logger.error "Error: browser not detected in config"

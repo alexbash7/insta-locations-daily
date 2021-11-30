@@ -28,6 +28,7 @@ module Spider
 
 		def self.disconnect
 			@@db.disconnect rescue nil
+			@@db = nil
 		end
 	end
 end
