@@ -20,9 +20,11 @@ module Spider
 			sleep 3
 			username_el = Spider::WebBrowser.get_driver.find_element(:css => "input[name='username']") rescue nil
 			if username_el.nil?
+				@@logger.debug "allready logged in"
 				click_not_now_notifications
 				return true
 			end
+			@@logger.debug "try to login"
 			username_el.click
 			username_el.send_keys username
 			password_el = Spider::WebBrowser.get_driver.find_element(:css => "input[name='password']")
