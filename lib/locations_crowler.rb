@@ -23,8 +23,6 @@ module Spider
 			Spider::WebBrowser.set_profile_dir_name profile_dir
 			config = Spider::Config.get_config
 			Spider::InstagramBot.login config.insta_account['login'], config.insta_account['password']
-			logger.debug 'save page_source AFTER LOGIN'
-			Spider::DB.get_db[:screenshots].insert(image: 'after_login', html: Spider::WebBrowser.get_driver.page_source.gsub(/[\u{10000}-\u{10FFFF}]/, "?").gsub(Unicode::Emoji::REGEX, "[smile]"))
 			while true
 				begin
 					no_parse_locations = Spider::DB.get_db[:locations_daily].where(:is_parse => 0).all
