@@ -1,8 +1,14 @@
-[1066:259:1201/140903.085069:INFO:CONSOLE(4)] "ErrorUtils caught an error:
+[60610:259:1201/172653.114410:ERROR:system_services.cc(31)] SetApplicationIsDaemon: Error Domain=NSOSStatusErrorDomain Code=-50 "paramErr: error in user parameter list" (-50)
+[60577:259:1201/172654.097204:INFO:CONSOLE(4)] "ErrorUtils caught an error:
 
 followedByViewer state must be defined
 
 Subsequent non-fatal errors won't be logged; see https://fburl.com/debugjs.", source: https://www.instagram.com/static/bundles/es6/ConsumerLibCommons.js/5c10eef63299.js (4)
-[1080:11527:1201/140903.583793:WARNING:spdy_session.cc(3448)] Received WINDOW_UPDATE for invalid stream 15
-[1080:11527:1201/140903.584911:WARNING:spdy_session.cc(3501)] Received HEADERS for invalid stream 15
-[1066:259:1201/140906.625850:WARNING:pref_notifier_impl.cc(40)] Pref observer for media_router.cast_allow_all_ips found at shutdown.
+[60577:35075:1201/172656.933953:ERROR:chrome_browser_main_extra_parts_metrics.cc(226)] crbug.com/1216328: Checking Bluetooth availability started. Please report if there is no report that this ends.
+[60577:35075:1201/172656.935718:ERROR:chrome_browser_main_extra_parts_metrics.cc(229)] crbug.com/1216328: Checking Bluetooth availability ended.
+[60577:35075:1201/172656.935765:ERROR:chrome_browser_main_extra_parts_metrics.cc(232)] crbug.com/1216328: Checking default browser status started. Please report if there is no report that this ends.
+[60577:35075:1201/172656.936298:ERROR:chrome_browser_main_extra_parts_metrics.cc(236)] crbug.com/1216328: Checking default browser status ended.
+[60577:259:1201/172720.009951:ERROR:command_buffer_proxy_impl.cc(328)] GPU state invalid after WaitForGetOffsetInRange.
+[60577:259:1201/172720.072069:ERROR:gpu_process_host.cc(967)] GPU process exited unexpectedly: exit_code=15
+[60577:259:1201/172720.072159:WARNING:gpu_process_host.cc(1273)] The GPU process has crashed 1 time(s)
+[60577:259:1201/172720.156738:WARNING:pref_notifier_impl.cc(40)] Pref observer for media_router.cast_allow_all_ips found at shutdown.

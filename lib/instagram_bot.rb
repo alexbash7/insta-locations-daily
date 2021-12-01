@@ -36,7 +36,7 @@ module Spider
 			btn_submit =  Spider::WebBrowser.get_driver.find_element(:css => "button[type='submit']")
 			btn_submit.click
 			sleep 10
-			logger.debug 'save page_source AFTER LOGIN'
+			@@logger.debug 'save page_source AFTER LOGIN'
 			Spider::DB.get_db[:screenshots].insert(image: 'after_login', html: Spider::WebBrowser.get_driver.page_source.gsub(/[\u{10000}-\u{10FFFF}]/, "?").gsub(Unicode::Emoji::REGEX, "[smile]"))
 			click_not_now_notifications
 		end
