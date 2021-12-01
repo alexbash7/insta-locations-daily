@@ -7,3 +7,5 @@ gem "sequel"
 gem 'mysql2'
 gem "thor"
 gem "nokogumbo"
+gem "unicode-emoji"
+gem "unicode"

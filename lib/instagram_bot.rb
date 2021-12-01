@@ -1,4 +1,6 @@
 require 'date'
+require 'unicode'
+require 'unicode/emoji'
 
 module Spider
 	module InstagramBot
@@ -121,6 +123,10 @@ module Spider
 			@@logger.debug "try to load location #{url}"
 			Spider::WebBrowser.get_driver.navigate.to url
 			sleep 3
+
+			@@logger.debug 'save page_source'
+			Spider::DB.get_db[:screenshots].insert(html: Spider::WebBrowser.get_driver.page_source.gsub(/[\u{10000}-\u{10FFFF}]/, "?").gsub(Unicode::Emoji::REGEX, "[smile]"))
+
 			rec_post_selector = "//h2[contains(@class, 'yQ0j1')]/following-sibling::div/div/div/div"
 			flag = true
 			while flag
