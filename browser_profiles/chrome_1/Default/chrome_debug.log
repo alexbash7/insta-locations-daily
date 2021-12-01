@@ -1,7 +1,7 @@
-[1130/224521.521112:ERROR:file_io.cc(94)] ReadExactly: expected 8, observed 0
-[1130/224521.525491:ERROR:xattr.cc(63)] setxattr org.chromium.crashpad.database.initialized on file /var/folders/89/04667b0j7m7cqf55znw7grp40000gn/T/: Operation not permitted (1)
-[1130/224536.431090:INFO:CONSOLE(4)] "ErrorUtils caught an error:
+[1201/084101.090134:ERROR:file_io.cc(94)] ReadExactly: expected 8, observed 0
+[1201/084101.093331:ERROR:xattr.cc(63)] setxattr org.chromium.crashpad.database.initialized on file /var/folders/_n/07cjgczd52b1swhc4gfz_yvm0000gn/T/: Operation not permitted (1)
+[1201/084105.778161:INFO:CONSOLE(4)] "ErrorUtils caught an error:
 
 followedByViewer state must be defined
 
-Subsequent non-fatal errors won't be logged; see https://fburl.com/debugjs.", source: https://www.instagram.com/static/bundles/es6/ConsumerLibCommons.js/f1ccaccbcdba.js (4)
+Subsequent non-fatal errors won't be logged; see https://fburl.com/debugjs.", source: https://www.instagram.com/static/bundles/es6/ConsumerLibCommons.js/5c10eef63299.js (4)
