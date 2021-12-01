@@ -45,6 +45,8 @@ module Spider
 			@@logger.debug "try to load #{url}"
 			Spider::WebBrowser.get_driver.navigate.to url
 			time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
+			@@logger.debug "save page source in location parse post"
+			Spider::DB.get_db[:screenshots].insert(image: 'parse_post', html: Spider::WebBrowser.get_driver.page_source.gsub(/[\u{10000}-\u{10FFFF}]/, "?").gsub(Unicode::Emoji::REGEX, "[smile]"))
 			if time_el.nil?
 				sleep 2
 				time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
