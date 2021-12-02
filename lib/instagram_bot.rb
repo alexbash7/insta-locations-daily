@@ -6,6 +6,7 @@ module Spider
 	module InstagramBot
 		POSTS_PERIOD_MINUTES = 60
 		SCREENSHOTS_DIR = File.join(__dir__, '..', 'tmp')
+		BUN_SLEEP = 60 * 10
 
 		def self.set_logger logger
 			@@logger = logger
@@ -74,7 +75,7 @@ module Spider
 				save_screenshot 'login_bun'
 				Spider::WebBrowser.quit_browser
 				@@logger.debug "Page banned. I'm sleep 5 min and exit"
-				sleep 60 * 5
+				sleep BUN_SLEEP
 				exit
 			else
 				@@logger.debug "#login - No bun"
@@ -122,7 +123,7 @@ module Spider
 				save_screenshot 'scrape_post_properties_bun'
 				Spider::WebBrowser.quit_browser
 				@@logger.debug "Page banned. I'm sleep 5 min and exit"
-				sleep 60 * 5
+				sleep BUN_SLEEP
 				exit
 			else
 				@@logger.debug "#scrape_post_properties - No bun"
@@ -211,7 +212,7 @@ module Spider
 				save_screenshot 'get_location_posts_bun'
 				Spider::WebBrowser.quit_browser
 				@@logger.debug "Page banned. I'm sleep 5 min and exit"
-				sleep 60 * 5
+				sleep BUN_SLEEP
 				exit
 			else
 				@@logger.debug "#get_location_posts - No bun"
