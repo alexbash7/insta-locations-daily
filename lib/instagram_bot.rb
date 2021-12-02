@@ -74,7 +74,7 @@ module Spider
 			if is_page_bunned
 				save_screenshot 'login_bun'
 				Spider::WebBrowser.quit_browser
-				@@logger.debug "Page banned. I'm sleep 5 min and exit"
+				@@logger.debug "Page banned. I'm sleep 10 min and exit"
 				sleep BUN_SLEEP
 				exit
 			else
