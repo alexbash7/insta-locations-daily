@@ -1,11 +1,7 @@
-[1202/141529.711392:ERROR:file_io.cc(94)] ReadExactly: expected 8, observed 0
-[1202/141529.716297:ERROR:xattr.cc(63)] setxattr org.chromium.crashpad.database.initialized on file /var/folders/89/04667b0j7m7cqf55znw7grp40000gn/T/: Operation not permitted (1)
-[1202/141532.581020:INFO:CONSOLE(4)] "ErrorUtils caught an error:
+[1202/151851.704268:ERROR:file_io.cc(94)] ReadExactly: expected 8, observed 0
+[1202/151851.709093:ERROR:xattr.cc(63)] setxattr org.chromium.crashpad.database.initialized on file /var/folders/89/04667b0j7m7cqf55znw7grp40000gn/T/: Operation not permitted (1)
+[1202/151855.052403:INFO:CONSOLE(4)] "ErrorUtils caught an error:
 
-ResizeObserver loop limit exceeded
+Failed to execute 'appendBuffer' on 'SourceBuffer': This SourceBuffer has been removed from the parent media source.
 
 Subsequent non-fatal errors won't be logged; see https://fburl.com/debugjs.", source: https://www.instagram.com/static/bundles/es6/ConsumerLibCommons.js/bf09a2db0d8c.js (4)
-[1202/141532.581413:INFO:CONSOLE(0)] "ResizeObserver loop limit exceeded", source: https://www.instagram.com/ (0)
-[1202/141532.581523:INFO:CONSOLE(55)] "Uncaught TypeError: Cannot read properties of undefined (reading 'push')", source: https://www.instagram.com/ (55)
-[1202/141601.867307:INFO:CONSOLE(0)] "Access to image at 'https://instagram.fhrk1-1.fna.fbcdn.net/v/t51.2885-15/e35/262719376_433968074855835_2888373544776676034_n.jpg?_nc_ht=instagram.fhrk1-1.fna.fbcdn.net&_nc_cat=103&_nc_ohc=xrHiPvJcDYEAX-Freoc&edm=AABBvjUBAAAA&ccb=7-4&oh=b1b7ffefc7473ecd8ebd4fb8c35fe7fe&oe=61AAFF50&_nc_sid=83d603' from origin 'https://www.instagram.com' has been blocked by CORS policy: Request header field cache-control is not allowed by Access-Control-Allow-Headers in preflight response.", source: https://www.instagram.com/p/CW-giG9gjtJ/ (0)
-[1202/141601.872730:INFO:CONSOLE(0)] "Access to image at 'https://instagram.fhrk1-1.fna.fbcdn.net/v/t51.2885-15/e35/262719376_433968074855835_2888373544776676034_n.jpg?_nc_ht=instagram.fhrk1-1.fna.fbcdn.net&_nc_cat=103&_nc_ohc=xrHiPvJcDYEAX-Freoc&edm=AABBvjUBAAAA&ccb=7-4&oh=b1b7ffefc7473ecd8ebd4fb8c35fe7fe&oe=61AAFF50&_nc_sid=83d603' from origin 'https://www.instagram.com' has been blocked by CORS policy: Request header field cache-control is not allowed by Access-Control-Allow-Headers in preflight response.", source: https://www.instagram.com/p/CW-giG9gjtJ/ (0)

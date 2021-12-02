@@ -12,7 +12,7 @@ module Spider
 		end
 
 		def self.is_page_bunned
-			matched = Spider::WebBrowser.get_driver.page_source.match /Please wait a few minutes before you try again/
+			matched = Spider::WebBrowser.get_driver.find_element(:css => "html").text.match /Please wait a few minutes before you try again/
 			if matched
 				return true
 			end
@@ -63,6 +63,8 @@ module Spider
 				@@logger.debug "Page banned. I'm sleep 60 min and exit"
 				sleep 60 * 60
 				exit
+			else
+				@@logger.debug "#login - No bun"
 			end
 			save_screenshot 'check_login'
 			is_login = check_login
