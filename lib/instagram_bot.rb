@@ -103,10 +103,14 @@ module Spider
 			
 			btn_submit =  Spider::WebBrowser.get_driver.find_element(:css => "button[type='submit']")
 			btn_submit.click
-			sleep 10
-			@@logger.debug 'save page_source AFTER LOGIN'
-			save_screenshot 'after_login'
+			sleep 8
+			@@logger.debug 'save page_source AFTER LOGIN1'
+			save_screenshot 'after_login1'
 			click_not_now_notifications
+			click_save_info
+			sleep 2
+			@@logger.debug 'save page_source AFTER LOGIN2'
+			save_screenshot 'after_login2'
 		end
 
 		def self.scrape_post_properties url, posts
