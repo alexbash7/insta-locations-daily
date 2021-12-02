@@ -11,6 +11,14 @@ module Spider
 			@@logger = logger
 		end
 
+		def self.is_page_bunned
+			matched = Spider::WebBrowser.get_driver.page_source.match /Please wait a few minutes before you try again/
+			if matched
+				return true
+			end
+			false
+		end
+
 		def self.click_not_now_notifications
 			notif_not_now = Spider::WebBrowser.get_driver.find_element(:xpath, "//*[contains(text(), 'Not Now')]") rescue nil
 			if notif_not_now
@@ -51,6 +59,11 @@ module Spider
 		def self.login username, pass
 			Spider::WebBrowser.get_driver.navigate.to "https://www.instagram.com/accounts/login/"
 			sleep 3
+			if is_page_bunned
+				@@logger.debug "Page banned. I'm sleep 60 min and exit"
+				sleep 60 * 60
+				exit
+			end
 			save_screenshot 'check_login'
 			is_login = check_login
 			@@logger.debug "is_login = #{is_login}"
