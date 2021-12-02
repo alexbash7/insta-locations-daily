@@ -19,6 +19,15 @@ module Spider
 			false
 		end
 
+		def self.click_save_info
+			notif_not_now = Spider::WebBrowser.get_driver.find_element(:xpath, "//*[contains(text(), 'Save Info')]") rescue nil
+			if notif_not_now
+				@@logger.debug "I'm click save info"
+				notif_not_now.click
+				sleep 2
+			end
+		end
+
 		def self.click_not_now_notifications
 			notif_not_now = Spider::WebBrowser.get_driver.find_element(:xpath, "//*[contains(text(), 'Not Now')]") rescue nil
 			if notif_not_now
@@ -60,6 +69,7 @@ module Spider
 			Spider::WebBrowser.get_driver.navigate.to "https://www.instagram.com/accounts/login/"
 			sleep 3
 			if is_page_bunned
+				Spider::WebBrowser.quit_browser
 				@@logger.debug "Page banned. I'm sleep 60 min and exit"
 				sleep 60 * 60
 				exit
