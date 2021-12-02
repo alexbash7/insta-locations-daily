@@ -5,6 +5,8 @@ require 'unicode/emoji'
 module Spider
 	module InstagramBot
 		POSTS_PERIOD_MINUTES = 60
+		SCREENSHOTS_DIR = File.join(__dir__, '..', 'tmp')
+
 		def self.set_logger logger
 			@@logger = logger
 		end
@@ -17,12 +19,51 @@ module Spider
 			end
 		end
 
+		def self.save_screenshot alias_name
+			file_path = File.join(SCREENSHOTS_DIR, "#{alias_name}.png")
+			Spider::WebBrowser.get_driver.save_screenshot file_path
+			file = File.open(file_path)
+			content = file.read
+			file.close
+			Spider::DB.get_db[:screenshots].insert(alias: alias_name, image: content, html: get_driver_page_source)
+		end
+
+		def self.get_driver_page_source
+			Spider::WebBrowser.get_driver.page_source.gsub(/[\u{10000}-\u{10FFFF}]/, "?").gsub(Unicode::Emoji::REGEX, "[smile]")
+		end
+
+		def self.check_login
+			html_el = Spider::WebBrowser.get_driver.find_element(:css => "html") rescue nil
+			if html_el.nil?
+				return 'not detected'
+			end
+			matched = html_el.attribute('class').match /not-logged-in/
+			if matched
+				return 'no login'
+			end
+			matched = html_el.attribute('class').match /logged-in/
+			if matched
+				return 'login'
+			end
+			'not detected'
+		end
+
 		def self.login username, pass
 			Spider::WebBrowser.get_driver.navigate.to "https://www.instagram.com/accounts/login/"
 			sleep 3
+			save_screenshot 'check_login'
+			is_login = check_login
+			@@logger.debug "is_login = #{is_login}"
+			if is_login == 'login'
+				@@logger.debug "allready logged in"
+				click_not_now_notifications
+				return true
+			end
+			
+
 			username_el = Spider::WebBrowser.get_driver.find_element(:css => "input[name='username']") rescue nil
 			if username_el.nil?
-				@@logger.debug "allready logged in"
+				@@logger.debug "#login - no username_el"
 				click_not_now_notifications
 				return true
 			end
@@ -37,7 +78,7 @@ module Spider
 			btn_submit.click
 			sleep 10
 			@@logger.debug 'save page_source AFTER LOGIN'
-			Spider::DB.get_db[:screenshots].insert(image: 'after_login', html: Spider::WebBrowser.get_driver.page_source.gsub(/[\u{10000}-\u{10FFFF}]/, "?").gsub(Unicode::Emoji::REGEX, "[smile]"))
+			save_screenshot 'after_login'
 			click_not_now_notifications
 		end
 
@@ -46,7 +87,7 @@ module Spider
 			Spider::WebBrowser.get_driver.navigate.to url
 			time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
 			@@logger.debug "save page source in location parse post"
-			Spider::DB.get_db[:screenshots].insert(image: 'parse_post', html: Spider::WebBrowser.get_driver.page_source.gsub(/[\u{10000}-\u{10FFFF}]/, "?").gsub(Unicode::Emoji::REGEX, "[smile]"))
+			save_screenshot 'parse_post'
 			if time_el.nil?
 				sleep 2
 				time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
@@ -77,7 +118,6 @@ module Spider
 						user_id = post_data['graphql']['shortcode_media']['owner']['id']
 					rescue
 						@@logger.error "user_id not detected"
-						@@logger.debug page_html
 						return true
 					end
 				end
@@ -127,10 +167,7 @@ module Spider
 			@@logger.debug "try to load location #{url}"
 			Spider::WebBrowser.get_driver.navigate.to url
 			sleep 3
-
-			@@logger.debug 'save page_source'
-			Spider::DB.get_db[:screenshots].insert(html: Spider::WebBrowser.get_driver.page_source.gsub(/[\u{10000}-\u{10FFFF}]/, "?").gsub(Unicode::Emoji::REGEX, "[smile]"))
-
+			save_screenshot 'parse_location_url'
 			rec_post_selector = "//h2[contains(@class, 'yQ0j1')]/following-sibling::div/div/div/div"
 			flag = true
 			while flag

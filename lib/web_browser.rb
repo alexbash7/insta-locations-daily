@@ -42,12 +42,14 @@ module Spider
 					options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36")
 					p @@profile_dir
 					if @@profile_dir
+						files_count = Dir.glob(File.join(get_profile_dir_path, '**', '*')).select { |file| File.file?(file) }.count
+						p "profile_dir files_count = #{files_count}"
 						options.add_argument("--user-data-dir=#{get_profile_dir_path}")
 					end
 					options.add_argument("--proxy-server=#{@@proxy[:host]}:#{@@proxy[:port]}") if @@proxy
 					options.add_argument('--headless') if config.web_browser['headless']
 					options.add_argument("--window-size=#{config.web_browser['window_width']},#{config.web_browser['window_height']}")
-					options.add_argument('--disable-dev-shm-usage') if config.web_browser['disable-dev-shm-usage']
+					# options.add_argument('--disable-dev-shm-usage') if config.web_browser['disable-dev-shm-usage']
 					if config.web_browser['disable_images']
 						options.add_argument('--blink-settings=imagesEnabled=false')
 					end
