@@ -126,8 +126,6 @@ module Spider
 				@@logger.debug "#scrape_post_properties - No bun"
 			end
 			time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
-			@@logger.debug "save page source in location parse post"
-			save_screenshot 'parse_post'
 			if time_el.nil?
 				sleep 2
 				time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
@@ -135,8 +133,8 @@ module Spider
 					sleep 4
 					time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
 					if time_el.nil?
-						# close_el = Spider::WebBrowser.get_driver.find_element(:xpath, "//*[contains(@aria-label, 'Close')]")
-						# close_el.click
+						@@logger.debug "save page source in location parse post"
+						save_screenshot 'parse_post'
 						return true
 					end
 				end
