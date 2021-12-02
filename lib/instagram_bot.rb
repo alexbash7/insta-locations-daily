@@ -120,11 +120,8 @@ module Spider
 			Spider::WebBrowser.get_driver.navigate.to url
 			sleep 1
 			if is_page_bunned
-				save_screenshot 'scrape_post_properties_bun'
-				Spider::WebBrowser.quit_browser
-				@@logger.debug "Page banned. I'm sleep 5 min and exit"
-				sleep BUN_SLEEP
-				exit
+				@@logger.debug "#scrape_post_properties - Bun"
+				return false
 			else
 				@@logger.debug "#scrape_post_properties - No bun"
 			end
@@ -209,11 +206,8 @@ module Spider
 			Spider::WebBrowser.get_driver.navigate.to url
 			sleep 3
 			if is_page_bunned
-				save_screenshot 'get_location_posts_bun'
-				Spider::WebBrowser.quit_browser
-				@@logger.debug "Page banned. I'm sleep 5 min and exit"
-				sleep BUN_SLEEP
-				exit
+				@@logger.debug "#get_location_posts - Bun"
+				return posts
 			else
 				@@logger.debug "#get_location_posts - No bun"
 			end
