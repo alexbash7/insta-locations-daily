@@ -206,9 +206,10 @@ module Spider
 			Spider::WebBrowser.get_driver.navigate.to url
 			sleep 3
 			if is_page_bunned
+				save_screenshot '#get_location_posts_bun'
 				Spider::WebBrowser.quit_browser
-				@@logger.debug "Page banned. I'm sleep 60 min and exit"
-				sleep 60 * 60
+				@@logger.debug "Page banned. I'm sleep 5 min and exit"
+				sleep 60 * 5
 				exit
 			else
 				@@logger.debug "#get_location_posts - No bun"
