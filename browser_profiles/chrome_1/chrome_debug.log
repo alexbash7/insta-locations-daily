@@ -1,15 +1,14 @@
-[5023:259:1202/141048.541026:INFO:CONSOLE(4)] "ErrorUtils caught an error:
+[8386:13059:1202/153939.346057:WARNING:spdy_session.cc(3501)] Received HEADERS for invalid stream 7
+[8377:259:1202/153940.712079:INFO:CONSOLE(4)] "ErrorUtils caught an error:
 
-ResizeObserver loop limit exceeded
+followedByViewer state must be defined
 
 Subsequent non-fatal errors won't be logged; see https://fburl.com/debugjs.", source: https://www.instagram.com/static/bundles/es6/ConsumerLibCommons.js/bf09a2db0d8c.js (4)
-[5023:259:1202/141048.541331:INFO:CONSOLE(0)] "ResizeObserver loop limit exceeded", source: https://www.instagram.com/ (0)
-[5023:259:1202/141048.541393:INFO:CONSOLE(55)] "Uncaught TypeError: Cannot read properties of undefined (reading 'push')", source: https://www.instagram.com/ (55)
-[5054:259:1202/141049.141347:ERROR:system_services.cc(31)] SetApplicationIsDaemon: Error Domain=NSOSStatusErrorDomain Code=-50 "paramErr: error in user parameter list" (-50)
-[5023:30723:1202/141052.826665:ERROR:chrome_browser_main_extra_parts_metrics.cc(226)] crbug.com/1216328: Checking Bluetooth availability started. Please report if there is no report that this ends.
-[5023:30723:1202/141052.829891:ERROR:chrome_browser_main_extra_parts_metrics.cc(229)] crbug.com/1216328: Checking Bluetooth availability ended.
-[5023:30723:1202/141052.829920:ERROR:chrome_browser_main_extra_parts_metrics.cc(232)] crbug.com/1216328: Checking default browser status started. Please report if there is no report that this ends.
-[5023:30723:1202/141052.830263:ERROR:chrome_browser_main_extra_parts_metrics.cc(236)] crbug.com/1216328: Checking default browser status ended.
-[5035:41535:1202/141105.098564:WARNING:sqlite_persistent_store_backend_base.cc(171)] Failed to post task from FlushAndNotifyInBackground@net/extras/sqlite/sqlite_persistent_store_backend_base.cc:219 to client_task_runner_.
-[5035:41535:1202/141105.099334:WARNING:sqlite_persistent_store_backend_base.cc(171)] Failed to post task from FlushAndNotifyInBackground@net/extras/sqlite/sqlite_persistent_store_backend_base.cc:219 to client_task_runner_.
-[5023:259:1202/141105.188275:WARNING:pref_notifier_impl.cc(40)] Pref observer for media_router.cast_allow_all_ips found at shutdown.
+[8402:259:1202/153941.823286:ERROR:system_services.cc(31)] SetApplicationIsDaemon: Error Domain=NSOSStatusErrorDomain Code=-50 "paramErr: error in user parameter list" (-50)
+[8377:26371:1202/153945.256602:ERROR:chrome_browser_main_extra_parts_metrics.cc(226)] crbug.com/1216328: Checking Bluetooth availability started. Please report if there is no report that this ends.
+[8377:26371:1202/153945.260569:ERROR:chrome_browser_main_extra_parts_metrics.cc(229)] crbug.com/1216328: Checking Bluetooth availability ended.
+[8377:26371:1202/153945.260672:ERROR:chrome_browser_main_extra_parts_metrics.cc(232)] crbug.com/1216328: Checking default browser status started. Please report if there is no report that this ends.
+[8377:26371:1202/153945.261059:ERROR:chrome_browser_main_extra_parts_metrics.cc(236)] crbug.com/1216328: Checking default browser status ended.
+[8386:23051:1202/154012.902862:WARNING:sqlite_persistent_store_backend_base.cc(171)] Failed to post task from FlushAndNotifyInBackground@net/extras/sqlite/sqlite_persistent_store_backend_base.cc:219 to client_task_runner_.
+[8386:23051:1202/154012.903001:WARNING:sqlite_persistent_store_backend_base.cc(171)] Failed to post task from FlushAndNotifyInBackground@net/extras/sqlite/sqlite_persistent_store_backend_base.cc:219 to client_task_runner_.
+[8377:259:1202/154012.941721:WARNING:pref_notifier_impl.cc(40)] Pref observer for media_router.cast_allow_all_ips found at shutdown.

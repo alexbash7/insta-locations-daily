@@ -64,6 +64,8 @@ module Spider
 			Spider::InstagramBot.set_logger logger
 			Spider::WebBrowser.set_profile_dir_name profile_dir
 			config = Spider::Config.get_config
+			proxy = {:host => '137.184.109.153', :port => '8091'}
+			Spider::WebBrowser.set_proxy proxy
 			Spider::InstagramBot.login config.insta_account['login'], config.insta_account['password']
 			run_crowler logger
 			logger.info "I'm finished"
