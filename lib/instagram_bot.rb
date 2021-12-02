@@ -12,10 +12,12 @@ module Spider
 		end
 
 		def self.is_page_bunned
-			matched = Spider::WebBrowser.get_driver.find_element(:css => "html").text.match /Please wait a few minutes before you try again/
-			if matched
+			html_text = Spider::WebBrowser.get_driver.find_element(:css => "html").text
+			matched = html_text.match /Please wait a few minutes before you try again/
+			if html_text.empty? || matched
 				return true
 			end
+
 			false
 		end
 
@@ -110,6 +112,15 @@ module Spider
 		def self.scrape_post_properties url, posts
 			@@logger.debug "try to load #{url}"
 			Spider::WebBrowser.get_driver.navigate.to url
+			sleep 1
+			if is_page_bunned
+				Spider::WebBrowser.quit_browser
+				@@logger.debug "Page banned. I'm sleep 60 min and exit"
+				sleep 60 * 60
+				exit
+			else
+				@@logger.debug "#scrape_post_properties - No bun"
+			end
 			time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
 			@@logger.debug "save page source in location parse post"
 			save_screenshot 'parse_post'
@@ -192,6 +203,14 @@ module Spider
 			@@logger.debug "try to load location #{url}"
 			Spider::WebBrowser.get_driver.navigate.to url
 			sleep 3
+			if is_page_bunned
+				Spider::WebBrowser.quit_browser
+				@@logger.debug "Page banned. I'm sleep 60 min and exit"
+				sleep 60 * 60
+				exit
+			else
+				@@logger.debug "#get_location_posts - No bun"
+			end
 			save_screenshot 'parse_location_url'
 			rec_post_selector = "//h2[contains(@class, 'yQ0j1')]/following-sibling::div/div/div/div"
 			flag = true
