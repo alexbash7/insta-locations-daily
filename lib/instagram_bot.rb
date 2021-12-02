@@ -15,7 +15,11 @@ module Spider
 		def self.is_page_bunned
 			html_text = Spider::WebBrowser.get_driver.find_element(:css => "html").text
 			matched = html_text.match /Please wait a few minutes before you try again/
-			if html_text.empty? || matched
+			if matched
+				return true
+			end
+			body_inner = Spider::WebBrowser.get_driver.find_element(:css => "body").attribute('innerHTML')
+			if body_inner.empty?
 				return true
 			end
 
