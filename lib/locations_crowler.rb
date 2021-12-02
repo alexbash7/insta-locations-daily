@@ -18,7 +18,7 @@ module Spider
 		end
 
 		def self.run log_level: "ERROR", profile_dir: false
-			once_run(log_level: log_level, profile_dir: profile_dir)
+			infinite_run(log_level: log_level, profile_dir: profile_dir)
 		end
 
 		def self.run_crowler logger
