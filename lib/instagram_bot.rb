@@ -16,6 +16,21 @@ module Spider
 			@@logger = logger
 		end
 
+		def self.insert_in_db posts, location_id
+			Spider::DB.get_db.transaction do
+				posts.each do |post|
+					blacklist_user = Spider::DB.get_db[:blacklist_users].where(:user_id => post['user_id']).first
+					if blacklist_user
+						next
+					end
+					begin
+						Spider::DB.get_db[:posts].insert(:img_url => post['img_url'], :user_id => post['user_id'], :post_url => post['post_url'], :location_id => location_id, :post_date => post['date'])
+					rescue Sequel::UniqueConstraintViolation
+					end
+				end
+			end
+		end
+
 		def self.get_location_http_response page_number, max_id, location_id, attempt = 1
 			begin
 				sessions = [
@@ -44,9 +59,9 @@ module Spider
 					max_id_par = '&max_id=' + max_id.gsub('=', '%3D')
 				end
 				data = 'surface=grid&tab=recent'+max_id_par+'&page='+page_number.to_s+'&next_media_ids=%5B%5D'
-				@@logger.debug "@@sess_index = #{@@sess_index}"
+				# @@logger.debug "@@sess_index = #{@@sess_index}"
 				@@logger.debug "req data = #{data}"
-				@@logger.debug "req location_id = #{location_id}"
+				# @@logger.debug "req location_id = #{location_id}"
 				headers = {
 					'accept' => '*/*',
 					'accept-encoding' => 'gzip, deflate, br',
@@ -98,21 +113,27 @@ module Spider
 			end
 		end
 
-		def self.get_location_posts url
+		def self.get_location_posts url, location_row
 			posts = []
 			@@logger.debug "try to load location #{url}"
 			location_id = url.scan(/[0-9]+/).first
 			current_time = Time.now
 			page = 0
 			flag = true
-			posts = []
-			posts_hash = {}
+			# posts_hash = {}
 			max_id = ''
 			while flag
+				posts = []
 				page_response = get_location_page_json page, max_id, location_id
 				if page_response.empty?
 					@@logger.debug "#get_location_posts - empty http response"
-					return posts
+					begin
+						insert_in_db posts, location_row[:id]
+					rescue Sequel::DatabaseDisconnectError
+						Spider::DB.disconnect
+						insert_in_db posts, location_row[:id]
+					end
+					return true
 				end
 				prev_posts_count = posts.count
 				sections = page_response['sections']
@@ -138,7 +159,7 @@ module Spider
 							flag = false
 							break
 						else
-							posts_hash[post_url] = true
+							# posts_hash[post_url] = true
 							posts.push({
 								'img_url' => img_src,
 								'user_id' => user_id,
@@ -150,15 +171,21 @@ module Spider
 				end
 				@@logger.debug "posts.last['date'] = #{posts.last['date']}"
 				@@logger.debug "#{posts.count} posts scrapped"
-				@@logger.debug "#{posts_hash.keys.count} uniqu posts scrapped"
+				# @@logger.debug "#{posts_hash.keys.count} uniqu posts scrapped"
 				if prev_posts_count == posts.count
 					@@logger.debug "Posts not increase, stop location load"
 					flag = false
 				end
+				begin
+					insert_in_db posts, location_row[:id]
+				rescue Sequel::DatabaseDisconnectError
+					Spider::DB.disconnect
+					insert_in_db posts, location_row[:id]
+				end
+				
 				max_id = page_response['next_max_id']
 				page += 1
 			end
-			posts
 		end
 	end
 end
