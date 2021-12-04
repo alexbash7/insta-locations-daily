@@ -1,6 +1,6 @@
 module Spider
 	class LocationsCrowler
-		SLEEP_MINUTES = 60*24
+		SLEEP_MINUTES = 60*60*24
 
 		def self.insert_in_db posts, location_id
 			Spider::DB.get_db.transaction do
@@ -18,7 +18,15 @@ module Spider
 		end
 
 		def self.run log_level: "ERROR", profile_dir: false
-			infinite_run(log_level: log_level, profile_dir: profile_dir)
+			logger = Spider::ProjectLogger.get_logger log_level
+			Spider::InstagramBot.set_logger logger
+			config = Spider::Config.get_config
+			while true
+				run_crowler logger
+				Spider::DB.disconnect
+				logger.info "I'm sleep #{SLEEP_MINUTES} minutes"
+				sleep SLEEP_MINUTES
+			end
 		end
 
 		def self.run_crowler logger
@@ -42,35 +50,6 @@ module Spider
 			end
 			Spider::DB.get_db[:locations_daily].update(:is_parse => 0)
 			Spider::WebBrowser.quit_browser
-		end
-
-		def self.infinite_run log_level: "ERROR", profile_dir: false
-			logger = Spider::ProjectLogger.get_logger log_level
-			logger.debug "infinite crowler is runing"
-			Spider::InstagramBot.set_logger logger
-			Spider::WebBrowser.set_profile_dir_name profile_dir
-			config = Spider::Config.get_config
-			proxy = {:host => '137.184.109.153', :port => '8091'}
-			Spider::WebBrowser.set_proxy proxy
-			Spider::InstagramBot.login config.insta_account['login'], config.insta_account['password']
-			while true
-				run_crowler logger
-				logger.info "I'm sleep #{SLEEP_MINUTES} minutes"
-				sleep SLEEP_MINUTES
-			end
-		end
-
-		def self.once_run log_level: "ERROR", profile_dir: false
-			logger = Spider::ProjectLogger.get_logger log_level
-			logger.debug "once crowler is runing"
-			Spider::InstagramBot.set_logger logger
-			Spider::WebBrowser.set_profile_dir_name profile_dir
-			config = Spider::Config.get_config
-			proxy = {:host => '137.184.109.153', :port => '8091'}
-			Spider::WebBrowser.set_proxy proxy
-			Spider::InstagramBot.login config.insta_account['login'], config.insta_account['password']
-			run_crowler logger
-			logger.info "I'm finished"
 		end
 	end
 end

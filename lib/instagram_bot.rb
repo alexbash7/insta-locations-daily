@@ -1,10 +1,14 @@
 require 'date'
 require 'unicode'
 require 'unicode/emoji'
+require 'net/http'
+require 'zlib'
+require 'stringio'
+require 'json'
 
 module Spider
 	module InstagramBot
-		POSTS_PERIOD_MINUTES = 60
+		POSTS_PERIOD_MINUTES = 24*60
 		SCREENSHOTS_DIR = File.join(__dir__, '..', 'tmp')
 		BUN_SLEEP = 60 * 10
 
@@ -12,258 +16,149 @@ module Spider
 			@@logger = logger
 		end
 
-		def self.is_page_bunned
-			html_text = Spider::WebBrowser.get_driver.find_element(:css => "html").text
-			matched = html_text.match /Please wait a few minutes before you try again/
-			if matched
-				return true
-			end
-			body_inner = Spider::WebBrowser.get_driver.find_element(:css => "body").attribute('innerHTML')
-			if body_inner.empty?
-				return true
-			end
-
-			false
-		end
-
-		def self.click_save_info
-			notif_not_now = Spider::WebBrowser.get_driver.find_element(:xpath, "//*[contains(text(), 'Save Info')]") rescue nil
-			if notif_not_now
-				@@logger.debug "I'm click save info"
-				notif_not_now.click
-				sleep 2
-			end
-		end
-
-		def self.click_not_now_notifications
-			notif_not_now = Spider::WebBrowser.get_driver.find_element(:xpath, "//*[contains(text(), 'Not Now')]") rescue nil
-			if notif_not_now
-				notif_not_now.click
-				sleep 1
-			end
-		end
-
-		def self.save_screenshot alias_name
-			file_path = File.join(SCREENSHOTS_DIR, "#{alias_name}.png")
-			Spider::WebBrowser.get_driver.save_screenshot file_path
-			file = File.open(file_path)
-			content = file.read
-			file.close
-			Spider::DB.get_db[:screenshots].insert(alias: alias_name, image: content, html: get_driver_page_source)
-		end
-
-		def self.get_driver_page_source
-			Spider::WebBrowser.get_driver.page_source.gsub(/[\u{10000}-\u{10FFFF}]/, "?").gsub(Unicode::Emoji::REGEX, "[smile]")
-		end
-
-		def self.check_login
-			html_el = Spider::WebBrowser.get_driver.find_element(:css => "html") rescue nil
-			if html_el.nil?
-				return 'not detected'
-			end
-			matched = html_el.attribute('class').match /not-logged-in/
-			if matched
-				return 'no login'
-			end
-			matched = html_el.attribute('class').match /logged-in/
-			if matched
-				return 'login'
-			end
-			'not detected'
-		end
-
-		def self.login username, pass
-			Spider::WebBrowser.get_driver.navigate.to "https://www.instagram.com/accounts/login/"
-			sleep 3
-			if is_page_bunned
-				save_screenshot 'login_bun'
-				Spider::WebBrowser.quit_browser
-				@@logger.debug "Page banned. I'm sleep 10 min and exit"
-				sleep BUN_SLEEP
-				exit
-			else
-				@@logger.debug "#login - No bun"
-			end
-			save_screenshot 'check_login'
-			is_login = check_login
-			@@logger.debug "is_login = #{is_login}"
-			if is_login == 'login'
-				@@logger.debug "allready logged in"
-				click_not_now_notifications
-				return true
-			end
-			
-
-			username_el = Spider::WebBrowser.get_driver.find_element(:css => "input[name='username']") rescue nil
-			if username_el.nil?
-				@@logger.debug "#login - no username_el"
-				click_not_now_notifications
-				return true
-			end
-			@@logger.debug "try to login"
-			username_el.click
-			username_el.send_keys username
-			password_el = Spider::WebBrowser.get_driver.find_element(:css => "input[name='password']")
-			password_el.click
-			password_el.send_keys pass
-			
-			btn_submit =  Spider::WebBrowser.get_driver.find_element(:css => "button[type='submit']")
-			btn_submit.click
-			sleep 8
-			@@logger.debug 'save page_source AFTER LOGIN1'
-			save_screenshot 'after_login1'
-			click_not_now_notifications
-			click_save_info
-			sleep 2
-			@@logger.debug 'save page_source AFTER LOGIN2'
-			save_screenshot 'after_login2'
-		end
-
-		def self.scrape_post_properties url, posts
-			@@logger.debug "try to load #{url}"
-			Spider::WebBrowser.get_driver.navigate.to url
-			sleep 1
-			if is_page_bunned
-				@@logger.debug "#scrape_post_properties - Bun"
-				return false
-			else
-				@@logger.debug "#scrape_post_properties - No bun"
-			end
-			time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
-			if time_el.nil?
-				sleep 2
-				time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
-				if time_el.nil?
-					sleep 4
-					time_el = Spider::WebBrowser.get_driver.find_element(:css, 'a>time') rescue nil
-					if time_el.nil?
-						@@logger.debug "save page source in location parse post"
-						save_screenshot 'parse_post'
-						return true
-					end
+		def self.get_location_http_response page_number, max_id, location_id, attempt = 1
+			begin
+				sessions = [
+					# '45294772993%3ANqC3ffVkaXCKLN%3A26',
+					'45450101247%3AOAKXuwD1f1t6OS%3A2',
+					'45661832288%3AvKqSVrxBt1Blfd%3A16',
+					'45602006188%3A2coTcxoaHneL31%3A22',
+					'45648432877%3ANdhjMOY3p3BoU0%3A10',
+					'45076749441%3Av8dB19JnzrPY8L%3A5',
+					# '44775405086%3AmynsjPqCXCTBUJ%3A6',
+					'45290532920%3AS6O1UUgIuIeEbP%3A20',
+				]
+				@@sess_index ||= -1
+				@@sess_index += 1
+				if sessions.count == @@sess_index
+					@@sess_index = 0
 				end
+				session_id = sessions[@@sess_index]
+				proxy = Net::HTTP::Proxy('connect4.mproxy.top', '10813', 'alexwhte', 'alexwhte')
+				http = proxy.start('i.instagram.com', :use_ssl => true, :verify_mode => OpenSSL::SSL::VERIFY_NONE)
+				# http = Net::HTTP.new('i.instagram.com', 443)
+				http.use_ssl = true
+				path = "/api/v1/locations/#{location_id}/sections/"
+				max_id_par = ''
+				if page_number > 0
+					max_id_par = '&max_id=' + max_id.gsub('=', '%3D')
+				end
+				data = 'surface=grid&tab=recent'+max_id_par+'&page='+page_number.to_s+'&next_media_ids=%5B%5D'
+				@@logger.debug "@@sess_index = #{@@sess_index}"
+				@@logger.debug "req data = #{data}"
+				@@logger.debug "req location_id = #{location_id}"
+				headers = {
+					'accept' => '*/*',
+					'accept-encoding' => 'gzip, deflate, br',
+					'accept-language' => 'en-GB,en;q=0.9,en-US;q=0.8,ru;q=0.7',
+					'content-length' => '209',
+					'content-type' => 'application/x-www-form-urlencoded',
+					'cookie' => 'sessionid='+session_id,
+					'origin' => 'https://www.instagram.com',
+					'referer' => 'https://www.instagram.com/',
+					'sec-ch-ua' => '" Not A;Brand";v="99", "Chromium";v="96", "Google Chrome";v="96"',
+					'sec-ch-ua-mobile' => '?0',
+					'sec-ch-ua-platform' => '"macOS"',
+					'sec-fetch-dest' => 'empty',
+					'sec-fetch-mode' => 'cors',
+					'sec-fetch-site' => 'same-site',
+					'user-agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36',
+					'x-asbd-id' => '198387',
+					'x-csrftoken' => '2px9HDxLBbPqyE57NxR52k5asBS8EqAN',
+					'x-ig-app-id' => '936619743392459',
+					'x-ig-www-claim' => 'hmac.AR1Ny7RnGLJpi3yApnV1C2flBb6obPQ24lSkSneN6k6xA1IS',
+					'x-instagram-ajax' => '5cf8305bdd2d'
+				}
+
+				resp, post_data = http.post(path, data, headers)
+				if attempt < 3 && (resp.body.nil? || resp.body.empty?)
+					@@logger.debug "#get_location_http_response - data is nil. Attempt #{attempt + 1}"
+					return get_location_http_response(page_number, max_id, location_id, attempt + 1)
+				end
+				return [resp, post_data]
+			rescue Net::ReadTimeout
+				if attempt < 3
+					@@logger.debug "#get_location_http_response - attempt #{attempt + 1}"
+					return get_location_http_response(page_number, max_id, location_id, attempt + 1)
+				end
+				[nil,nil]
 			end
-			post_time_str = time_el.attribute("datetime")
-			post_time = DateTime.parse(post_time_str)
-			seconds_diff = ((DateTime.now - post_time) * 24 * 60 * 60).to_i
-			@@logger.debug "minutes diff = #{seconds_diff / 60 }"
-			if seconds_diff < 60 * POSTS_PERIOD_MINUTES
-				page_html = Spider::WebBrowser.get_driver.page_source
-				matched = page_html.match(/window\.__additionalDataLoaded\('.+?\',(.+?)\);<\/script>/)
-				if matched
-					post_data = JSON.parse(matched[1])
-					user_id = post_data['graphql']['shortcode_media']['owner']['id']
-				else
-					begin
-						matched = page_html.match(/window\._sharedData = (.+?)\);<\/script>/)
-						post_data = JSON.parse(matched[1])
-						user_id = post_data['graphql']['shortcode_media']['owner']['id']
-					rescue
-						@@logger.error "user_id not detected"
-						return true
-					end
-				end
-				@@logger.debug "user_id = #{user_id}"
-				img_src = nil
-				video = Spider::WebBrowser.get_driver.find_element(:xpath, "//article//video") rescue nil
-				if video
-					img_src = video.attribute("poster")
-				end
-				if img_src.nil?
-					img_el = Spider::WebBrowser.get_driver.find_element(:xpath, "//article//ul//img") rescue nil
-					if img_el
-						begin
-							img_src = img_el.attribute("src")
-						rescue
-							sleep 1
-							begin
-								img_el = Spider::WebBrowser.get_driver.find_element(:xpath, "//article//ul//img") rescue nil
-								img_src = img_el.attribute("src")
-							rescue
-								print 'Error on img_src. Press button'
-							end
-						end
-					end
-				end
-				if img_src.nil?
-					img_el = Spider::WebBrowser.get_driver.find_element(:xpath, "//article//img") rescue nil
-					if img_el
-						img_src = img_el.attribute("src")
-					end
-				end
-				@@logger.debug  "img_src = #{img_src}"
-				posts.push({
-					'img_url' => img_src,
-					'user_id' => user_id,
-					'post_url' => url,
-					'date' => post_time,
-				})
-			else
-				return false
+		end
+
+		def self.get_location_page_json page_number, max_id, location_id			
+			resp, data = get_location_http_response page_number, max_id, location_id
+			begin
+				gz = Zlib::GzipReader.new(StringIO.new(resp.body.to_s))
+				uncompressed_string = gz.read
+				JSON.parse(uncompressed_string)
+			rescue
+				p resp
+				p resp.body
+				{}
 			end
-			true
 		end
 
 		def self.get_location_posts url
 			posts = []
 			@@logger.debug "try to load location #{url}"
-			Spider::WebBrowser.get_driver.navigate.to url
-			sleep 3
-			if is_page_bunned
-				@@logger.debug "#get_location_posts - Bun"
-				return posts
-			else
-				@@logger.debug "#get_location_posts - No bun"
-			end
-			save_screenshot 'parse_location_url'
-			rec_post_selector = "//h2[contains(@class, 'yQ0j1')]/following-sibling::div/div/div/div"
+			location_id = url.scan(/[0-9]+/).first
+			current_time = Time.now
+			page = 0
 			flag = true
+			posts = []
+			posts_hash = {}
+			max_id = ''
 			while flag
-				recent_posts = Spider::WebBrowser.get_driver.find_elements(:xpath, rec_post_selector) rescue 0
-				if recent_posts.count == 0
+				page_response = get_location_page_json page, max_id, location_id
+				if page_response.empty?
+					@@logger.debug "#get_location_posts - empty http response"
+					return posts
+				end
+				prev_posts_count = posts.count
+				sections = page_response['sections']
+				sections.each do |section|
+					medias = section['layout_content']['medias']
+					medias.each do |media|
+						media_info = media['media']
+						carousel_media = media_info['carousel_media'] rescue nil
+						if carousel_media.nil?
+							img_src_text = media_info['image_versions2']['candidates'].first['url']
+						else
+							img_src_text = carousel_media.first['image_versions2']['candidates'].first['url']
+						end
+						img_src = img_src_text.gsub('\\\\u0026','&')
+						user_id = media_info['user']['pk']
+						code = media_info['code']
+						post_url = "https://www.instagram.com/p/#{code}/"
+						taken_at = media_info['taken_at']
+						post_time = Time.at(taken_at.to_i)
+						# @@logger.debug "Post time = #{post_time}"
+						if current_time - post_time > POSTS_PERIOD_MINUTES * 60
+							@@logger.debug "Post time is old"
+							flag = false
+							break
+						else
+							posts_hash[post_url] = true
+							posts.push({
+								'img_url' => img_src,
+								'user_id' => user_id,
+								'post_url' => post_url,
+								'date' => post_time,
+							})
+						end
+					end
+				end
+				@@logger.debug "posts.last['date'] = #{posts.last['date']}"
+				@@logger.debug "#{posts.count} posts scrapped"
+				@@logger.debug "#{posts_hash.keys.count} uniqu posts scrapped"
+				if prev_posts_count == posts.count
+					@@logger.debug "Posts not increase, stop location load"
 					flag = false
-					next
 				end
-				urls = []
-				recent_posts.each do |_post_el|
-					begin
-						a_el = _post_el.find_element(:xpath, './/a')
-						url = a_el.attribute('href')
-						urls.push url
-					rescue
-						@@logger.warn "href not detected in the post list"
-					end
-					# close_el = Spider::WebBrowser.get_driver.find_element(:xpath, "//*[contains(@aria-label, 'Close')]")
-					# close_el.click
-				end
-				if Spider::WebBrowser.get_driver.window_handles.count == 1
-					Spider::WebBrowser.get_driver.execute_script( "window.open(); return true;" )
-					Spider::WebBrowser.get_driver.switch_to.window( Spider::WebBrowser.get_driver.window_handles.last )
-					sleep 2
-				else
-					Spider::WebBrowser.get_driver.switch_to.window( Spider::WebBrowser.get_driver.window_handles.last )
-					sleep 2
-				end
-				@@logger.debug  "#{urls.count} detected on page location"
-				urls.each do |url|
-					if flag
-						flag = scrape_post_properties url, posts
-					end
-				end
-				Spider::WebBrowser.get_driver.switch_to.window( Spider::WebBrowser.get_driver.window_handles.first )
-				sleep 2
-				if flag
-					sleep 1
-					Spider::WebBrowser.get_driver.find_elements(:xpath, rec_post_selector).each do |css_sel_el|
-						Spider::WebBrowser.get_driver.execute_script("var element = arguments[0]; element.remove(); return true;", css_sel_el) rescue nil
-					end
-					sleep 1
-					Spider::WebBrowser.get_driver.execute_script("window.scrollTo(0, document.documentElement.scrollHeight);")
-					sleep 4
-				end
+				max_id = page_response['next_max_id']
+				page += 1
 			end
 			posts
 		end
-
 	end
 end
