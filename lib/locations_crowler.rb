@@ -22,8 +22,9 @@ module Spider
 				no_parse_locations = Spider::DB.get_db[:locations_daily].where(:is_parse => 0).all
 			end
 			no_parse_locations.each do |location_row|
-				logger.info location_row
-				Spider::InstagramBot.get_location_posts location_row[:url], location_row
+				logger.info "Location - #{location_row}"
+				posts_count = Spider::InstagramBot.crawl_location_posts location_row[:url], location_row
+				logger.info "#{posts_count} posts found in location\n"
 				Spider::DB.get_db[:locations_daily].where(:id => location_row[:id]).update(:is_parse => 1)
 			end
 			Spider::DB.get_db[:locations_daily].update(:is_parse => 0)

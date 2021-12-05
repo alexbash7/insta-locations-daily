@@ -8,7 +8,7 @@ require 'json'
 
 module Spider
 	module InstagramBot
-		POSTS_PERIOD_MINUTES = 1*60
+		POSTS_PERIOD_MINUTES = 24*60
 
 		def self.set_logger logger
 			@@logger = logger
@@ -102,7 +102,7 @@ module Spider
 			end
 		end
 
-		def self.get_location_posts url, location_row
+		def self.crawl_location_posts url, location_row
 			cookie_list_text = Spider::DB.get_db[:settings].where(:app_name => 'insta-locations-daily').where(:key => 'cookie_list').first[:value] rescue ""
 			cookie_list = cookie_list_text.split("\n")
 			if cookie_list.empty?
@@ -169,8 +169,6 @@ module Spider
 						flag = false
 					end
 				end
-				@@logger.info "#{all_posts_count} posts found in location"
-				all_posts_count
 				begin
 					insert_in_db posts, location_row[:id]
 				rescue Sequel::DatabaseDisconnectError
@@ -179,6 +177,7 @@ module Spider
 				end
 				page += 1
 			end
+			all_posts_count
 		end
 	end
 end
