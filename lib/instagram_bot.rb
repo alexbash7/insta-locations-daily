@@ -8,9 +8,7 @@ require 'json'
 
 module Spider
 	module InstagramBot
-		POSTS_PERIOD_MINUTES = 24*60
-		SCREENSHOTS_DIR = File.join(__dir__, '..', 'tmp')
-		BUN_SLEEP = 60 * 10
+		POSTS_PERIOD_MINUTES = 1*60
 
 		def self.set_logger logger
 			@@logger = logger
@@ -31,24 +29,15 @@ module Spider
 			end
 		end
 
-		def self.get_location_http_response page_number, max_id, location_id, attempt = 1
+		def self.get_location_http_response cookie_list, page_number, max_id, location_id, attempt = 1
 			begin
-				sessions = [
-					# '45294772993%3ANqC3ffVkaXCKLN%3A26',
-					'45450101247%3AOAKXuwD1f1t6OS%3A2',
-					'45661832288%3AvKqSVrxBt1Blfd%3A16',
-					'45602006188%3A2coTcxoaHneL31%3A22',
-					'45648432877%3ANdhjMOY3p3BoU0%3A10',
-					'45076749441%3Av8dB19JnzrPY8L%3A5',
-					# '44775405086%3AmynsjPqCXCTBUJ%3A6',
-					'45290532920%3AS6O1UUgIuIeEbP%3A20',
-				]
+				cookie_list
 				@@sess_index ||= -1
 				@@sess_index += 1
-				if sessions.count == @@sess_index
+				if cookie_list.count == @@sess_index
 					@@sess_index = 0
 				end
-				session_id = sessions[@@sess_index]
+				session_id = cookie_list[@@sess_index]
 				proxy = Net::HTTP::Proxy('connect4.mproxy.top', '10813', 'alexwhte', 'alexwhte')
 				http = proxy.start('i.instagram.com', :use_ssl => true, :verify_mode => OpenSSL::SSL::VERIFY_NONE)
 				# http = Net::HTTP.new('i.instagram.com', 443)
@@ -88,20 +77,20 @@ module Spider
 				resp, post_data = http.post(path, data, headers)
 				if attempt < 3 && (resp.body.nil? || resp.body.empty?)
 					@@logger.debug "#get_location_http_response - data is nil. Attempt #{attempt + 1}"
-					return get_location_http_response(page_number, max_id, location_id, attempt + 1)
+					return get_location_http_response(cookie_list, page_number, max_id, location_id, attempt + 1)
 				end
 				return [resp, post_data]
 			rescue Net::ReadTimeout
 				if attempt < 3
 					@@logger.debug "#get_location_http_response - attempt #{attempt + 1}"
-					return get_location_http_response(page_number, max_id, location_id, attempt + 1)
+					return get_location_http_response(cookie_list, page_number, max_id, location_id, attempt + 1)
 				end
 				[nil,nil]
 			end
 		end
 
-		def self.get_location_page_json page_number, max_id, location_id			
-			resp, data = get_location_http_response page_number, max_id, location_id
+		def self.get_location_page_json cookie_list, page_number, max_id, location_id			
+			resp, data = get_location_http_response cookie_list, page_number, max_id, location_id
 			begin
 				gz = Zlib::GzipReader.new(StringIO.new(resp.body.to_s))
 				uncompressed_string = gz.read
@@ -114,76 +103,80 @@ module Spider
 		end
 
 		def self.get_location_posts url, location_row
+			cookie_list_text = Spider::DB.get_db[:settings].where(:app_name => 'insta-locations-daily').where(:key => 'cookie_list').first[:value] rescue ""
+			cookie_list = cookie_list_text.split("\n")
+			if cookie_list.empty?
+				@@logger.error "cookie_list not found in settings table. Exit"
+				sleep 5
+				exit
+			end
 			posts = []
 			@@logger.debug "try to load location #{url}"
 			location_id = url.scan(/[0-9]+/).first
 			current_time = Time.now
 			page = 0
+			no_posts_count = 0
+			all_posts_count = 0
 			flag = true
-			# posts_hash = {}
 			max_id = ''
 			while flag
 				posts = []
-				page_response = get_location_page_json page, max_id, location_id
+				page_response = get_location_page_json cookie_list, page, max_id, location_id
 				if page_response.empty?
 					@@logger.debug "#get_location_posts - empty http response"
-					begin
-						insert_in_db posts, location_row[:id]
-					rescue Sequel::DatabaseDisconnectError
-						Spider::DB.disconnect
-						insert_in_db posts, location_row[:id]
-					end
-					return true
-				end
-				prev_posts_count = posts.count
-				sections = page_response['sections']
-				sections.each do |section|
-					medias = section['layout_content']['medias']
-					medias.each do |media|
-						media_info = media['media']
-						carousel_media = media_info['carousel_media'] rescue nil
-						if carousel_media.nil?
-							img_src_text = media_info['image_versions2']['candidates'].first['url']
-						else
-							img_src_text = carousel_media.first['image_versions2']['candidates'].first['url']
-						end
-						img_src = img_src_text.gsub('\\\\u0026','&')
-						user_id = media_info['user']['pk']
-						code = media_info['code']
-						post_url = "https://www.instagram.com/p/#{code}/"
-						taken_at = media_info['taken_at']
-						post_time = Time.at(taken_at.to_i)
-						# @@logger.debug "Post time = #{post_time}"
-						if current_time - post_time > POSTS_PERIOD_MINUTES * 60
-							@@logger.debug "Post time is old"
-							flag = false
-							break
-						else
-							# posts_hash[post_url] = true
-							posts.push({
-								'img_url' => img_src,
-								'user_id' => user_id,
-								'post_url' => post_url,
-								'date' => post_time,
-							})
+				else
+					prev_posts_count = posts.count
+					sections = page_response['sections']
+					max_id = page_response['next_max_id']
+					sections.each do |section|
+						medias = section['layout_content']['medias']
+						medias.each do |media|
+							media_info = media['media']
+							carousel_media = media_info['carousel_media'] rescue nil
+							if carousel_media.nil?
+								img_src_text = media_info['image_versions2']['candidates'].first['url']
+							else
+								img_src_text = carousel_media.first['image_versions2']['candidates'].first['url']
+							end
+							img_src = img_src_text.gsub('\\\\u0026','&')
+							user_id = media_info['user']['pk']
+							code = media_info['code']
+							post_url = "https://www.instagram.com/p/#{code}/"
+							taken_at = media_info['taken_at']
+							post_time = Time.at(taken_at.to_i)
+							# @@logger.debug "Post time = #{post_time}"
+							if current_time - post_time > POSTS_PERIOD_MINUTES * 60
+								flag = false
+								break
+							else
+								posts.push({
+									'img_url' => img_src,
+									'user_id' => user_id,
+									'post_url' => post_url,
+									'date' => post_time,
+								})
+								all_posts_count += 1
+							end
 						end
 					end
+					@@logger.debug "posts.last['date'] = #{posts.last['date']}" if posts.last
+					@@logger.debug "#{posts.count} posts scrapped on page #{page}"
 				end
-				@@logger.debug "posts.last['date'] = #{posts.last['date']}"
-				@@logger.debug "#{posts.count} posts scrapped"
-				# @@logger.debug "#{posts_hash.keys.count} uniqu posts scrapped"
-				if prev_posts_count == posts.count
-					@@logger.debug "Posts not increase, stop location load"
-					flag = false
+				if posts.count == 0
+					no_posts_count += 1
+					if no_posts_count == 10
+						@@logger.info "Posts not found 10 times in sequence. Completing the crowl of location"
+						flag = false
+					end
 				end
+				@@logger.info "#{all_posts_count} posts found in location"
+				all_posts_count
 				begin
 					insert_in_db posts, location_row[:id]
 				rescue Sequel::DatabaseDisconnectError
 					Spider::DB.disconnect
 					insert_in_db posts, location_row[:id]
 				end
-				
-				max_id = page_response['next_max_id']
 				page += 1
 			end
 		end
