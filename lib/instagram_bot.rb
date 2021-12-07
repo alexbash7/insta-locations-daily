@@ -17,7 +17,7 @@ module Spider
 		def self.insert_in_db posts, location_id
 			Spider::DB.get_db.transaction do
 				posts.each do |post|
-					blacklist_user = Spider::DB.get_db[:blacklist_users].where(user_id: post['user_id']).first
+					blacklist_user = Spider::DB.get_db[:accounts_all].where(user_id: post['user_id']).first
 					if blacklist_user
 						next
 					end
@@ -148,6 +148,7 @@ module Spider
 							yesterday_day_number = Date.today.prev_day.strftime('%d').to_i
 							post_day_number = post_time.strftime('%d').to_i
 							if post_day_number != yesterday_day_number
+								@@logger.debug 'Not valid post date'
 								flag = false
 								break
 							else

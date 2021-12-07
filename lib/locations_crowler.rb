@@ -3,7 +3,7 @@ module Spider
 	class LocationsCrowler
 		SLEEP_MINUTES = 60
 		SECONDS_IN_MINUTE = 60
- 		START_HOURS = 1 # 01:00 AM everyday
+ 		START_HOURS = 15 # 01:00 AM everyday
 
 		def self.run log_level: 'ERROR', profile_dir: false
 			logger = Spider::ProjectLogger.get_logger log_level
@@ -11,6 +11,7 @@ module Spider
 			config = Spider::Config.get_config
 			while true
 				current_hours = Time.now.strftime('%H').to_i
+				puts "current_hours = #{current_hours}"
 
 				run_crowler logger if current_hours == START_HOURS
 
