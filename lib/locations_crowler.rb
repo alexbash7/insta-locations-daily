@@ -1,9 +1,8 @@
 require 'date'
 module Spider
 	class LocationsCrowler
-		SLEEP_MINUTES = 60
 		SECONDS_IN_MINUTE = 60
- 		START_HOURS = 15 # 01:00 AM everyday
+ 		START_HOURS = 1 # 01:00 AM everyday
 
 		def self.run log_level: 'ERROR', profile_dir: false
 			logger = Spider::ProjectLogger.get_logger log_level
@@ -11,13 +10,20 @@ module Spider
 			config = Spider::Config.get_config
 			while true
 				current_hours = Time.now.strftime('%H').to_i
-				puts "current_hours = #{current_hours}"
 
-				run_crowler logger if current_hours == START_HOURS
+				if current_hours == START_HOURS
+					run_crowler logger
+				end
+
+				tomorrow = Date.today + 1
+				tomorrow_1_am = Time.new(tomorrow.year, tomorrow.month, tomorrow.day, 1)
+				need_sleep_minutes = ((tomorrow_1_am - Time.now)/60).round
+
+				logger.info "#{need_sleep_minutes} minutes will sleep, until tomorrow 1AM"
 
 				Spider::DB.disconnect
-				logger.info "I'm sleep #{SLEEP_MINUTES} minutes"
-				sleep SLEEP_MINUTES * SECONDS_IN_MINUTE
+				logger.info "I'm sleep #{need_sleep_minutes} minutes"
+				sleep (need_sleep_minutes + 1) * SECONDS_IN_MINUTE
 			end
 		end
 
