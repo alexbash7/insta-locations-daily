@@ -3,6 +3,7 @@ GEM
   specs:
     childprocess (4.1.0)
     closed_struct (1.0.0)
+    date (3.2.2)
     mini_portile2 (2.6.1)
     mysql2 (0.5.3)
     nokogiri (1.12.5)
@@ -29,6 +30,7 @@ PLATFORMS
 
 DEPENDENCIES
   closed_struct
+  date
   mysql2
   nokogumbo
   selenium-webdriver
@@ -38,4 +40,4 @@ DEPENDENCIES
   unicode-emoji
 
 BUNDLED WITH
-   2.2.3
+   2.2.25

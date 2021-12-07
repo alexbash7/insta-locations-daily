@@ -13,6 +13,9 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y google-chrome-stable
 
+ENV TZ="Europe/Moscow"
+RUN date
+
 WORKDIR /usr/src/app
 COPY Gemfile .
 RUN bundle install

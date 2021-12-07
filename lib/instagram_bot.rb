@@ -17,12 +17,12 @@ module Spider
 		def self.insert_in_db posts, location_id
 			Spider::DB.get_db.transaction do
 				posts.each do |post|
-					blacklist_user = Spider::DB.get_db[:blacklist_users].where(:user_id => post['user_id']).first
+					blacklist_user = Spider::DB.get_db[:blacklist_users].where(user_id: post['user_id']).first
 					if blacklist_user
 						next
 					end
 					begin
-						Spider::DB.get_db[:posts].insert(:img_url => post['img_url'], :user_id => post['user_id'], :post_url => post['post_url'], :location_id => location_id, :post_date => post['date'])
+						Spider::DB.get_db[:posts].insert(img_url: post['img_url'], user_id: post['user_id'], post_url: post['post_url'], location_id: location_id, post_date: post['date'])
 					rescue Sequel::UniqueConstraintViolation
 					end
 				end
@@ -39,7 +39,7 @@ module Spider
 				end
 				session_id = cookie_list[@@sess_index]
 				proxy = Net::HTTP::Proxy('connect4.mproxy.top', '10813', 'alexwhte', 'alexwhte')
-				http = proxy.start('i.instagram.com', :use_ssl => true, :verify_mode => OpenSSL::SSL::VERIFY_NONE)
+				http = proxy.start('i.instagram.com', use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE)
 				# http = Net::HTTP.new('i.instagram.com', 443)
 				http.use_ssl = true
 				path = "/api/v1/locations/#{location_id}/sections/"
@@ -103,10 +103,10 @@ module Spider
 		end
 
 		def self.crawl_location_posts url, location_row
-			cookie_list_text = Spider::DB.get_db[:settings].where(:app_name => 'insta-locations-daily').where(:key => 'cookie_list').first[:value] rescue ""
+			cookie_list_text = Spider::DB.get_db[:settings].where(app_name: 'insta-locations-daily').where(key: 'cookie_list').first[:value] rescue ''
 			cookie_list = cookie_list_text.split("\n")
 			if cookie_list.empty?
-				@@logger.error "cookie_list not found in settings table. Exit"
+				@@logger.error 'cookie_list not found in settings table. Exit'
 				sleep 5
 				exit
 			end
@@ -123,7 +123,7 @@ module Spider
 				posts = []
 				page_response = get_location_page_json cookie_list, page, max_id, location_id
 				if page_response.empty?
-					@@logger.debug "#get_location_posts - empty http response"
+					@@logger.debug '#get_location_posts - empty http response'
 				else
 					prev_posts_count = posts.count
 					sections = page_response['sections']
@@ -145,7 +145,9 @@ module Spider
 							taken_at = media_info['taken_at']
 							post_time = Time.at(taken_at.to_i)
 							# @@logger.debug "Post time = #{post_time}"
-							if current_time - post_time > POSTS_PERIOD_MINUTES * 60
+							yesterday_day_number = Date.today.prev_day.strftime('%d').to_i
+							post_day_number = post_time.strftime('%d').to_i
+							if post_day_number != yesterday_day_number
 								flag = false
 								break
 							else
@@ -165,7 +167,7 @@ module Spider
 				if posts.count == 0
 					no_posts_count += 1
 					if no_posts_count == 10
-						@@logger.info "Posts not found 10 times in sequence. Completing the crowl of location"
+						@@logger.info 'Posts not found 10 times in sequence. Completing the crowl of location'
 						flag = false
 					end
 				end
