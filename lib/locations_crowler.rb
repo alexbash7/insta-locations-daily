@@ -2,7 +2,7 @@ require 'date'
 module Spider
 	class LocationsCrowler
 		SECONDS_IN_MINUTE = 60
- 		START_HOURS = 14 # 01:00 AM everyday
+ 		START_HOURS = 1 # 01:00 AM everyday
 
 		def self.run log_level: 'ERROR', profile_dir: false
 			logger = Spider::ProjectLogger.get_logger log_level
