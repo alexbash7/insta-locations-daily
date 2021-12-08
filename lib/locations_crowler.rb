@@ -9,8 +9,6 @@ module Spider
 			Spider::InstagramBot.set_logger logger
 			config = Spider::Config.get_config
 			ENV['TZ'] = 'Europe/Moscow'
-			p Time.now
-			sleep 1000000000
 			while true
 				current_hours = Time.now.strftime('%H').to_i
 
