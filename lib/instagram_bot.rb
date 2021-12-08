@@ -120,7 +120,7 @@ module Spider
 			@@logger.debug "try to load location #{url}"
 			location_id = url.scan(/[0-9]+/).first
 
-			yesterday_day_number = Date.today.strftime('%d').to_i#.prev_day.strftime('%d').to_i
+			yesterday_day_number = Date.today.prev_day.strftime('%d').to_i
 			page = 0
 			no_posts_count = 0
 			all_posts_count = 0
@@ -152,7 +152,7 @@ module Spider
 							taken_at = media_info['taken_at']
 							post_time = Time.at(taken_at.to_i)
 
-							if post_time.to_datetime < Date.today#.prev_day
+							if post_time.to_datetime < Date.today.prev_day
 								flag = false
 								break
 							end
