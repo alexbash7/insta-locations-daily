@@ -38,8 +38,14 @@ module Spider
 					@@sess_index = 0
 				end
 				session_id = cookie_list[@@sess_index]
-				proxy = Net::HTTP::Proxy('connect4.mproxy.top', '10813', 'alexwhte', 'alexwhte')
-				http = proxy.start('i.instagram.com', use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE)
+				begin
+					proxy = Net::HTTP::Proxy('connect4.mproxy.top', '10813', 'alexwhte', 'alexwhte')
+					http = proxy.start('i.instagram.com', use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE)
+				rescue OpenSSL::SSL::SSLError, Net::HTTPFatalError
+					sleep 2
+					proxy = Net::HTTP::Proxy('connect4.mproxy.top', '10813', 'alexwhte', 'alexwhte')
+					http = proxy.start('i.instagram.com', use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE)
+				end
 				# http = Net::HTTP.new('i.instagram.com', 443)
 				http.use_ssl = true
 				path = "/api/v1/locations/#{location_id}/sections/"
@@ -80,7 +86,7 @@ module Spider
 					return get_location_http_response(cookie_list, page_number, max_id, location_id, attempt + 1)
 				end
 				return [resp, post_data]
-			rescue Net::ReadTimeout
+			rescue Net::ReadTimeout, EOFError
 				if attempt < 3
 					@@logger.debug "#get_location_http_response - attempt #{attempt + 1}"
 					return get_location_http_response(cookie_list, page_number, max_id, location_id, attempt + 1)
@@ -113,7 +119,8 @@ module Spider
 			posts = []
 			@@logger.debug "try to load location #{url}"
 			location_id = url.scan(/[0-9]+/).first
-			current_time = Time.now
+
+			yesterday_day_number = Date.today.strftime('%d').to_i#.prev_day.strftime('%d').to_i
 			page = 0
 			no_posts_count = 0
 			all_posts_count = 0
@@ -144,22 +151,17 @@ module Spider
 							post_url = "https://www.instagram.com/p/#{code}/"
 							taken_at = media_info['taken_at']
 							post_time = Time.at(taken_at.to_i)
-							# @@logger.debug "Post time = #{post_time}"
-							yesterday_day_number = Date.today.prev_day.strftime('%d').to_i
-							post_day_number = post_time.strftime('%d').to_i
-							if post_day_number != yesterday_day_number
-								@@logger.debug 'Not valid post date'
+
+							if post_time.to_datetime < Date.today#.prev_day
 								flag = false
 								break
-							else
-								posts.push({
-									'img_url' => img_src,
-									'user_id' => user_id,
-									'post_url' => post_url,
-									'date' => post_time,
-								})
-								all_posts_count += 1
 							end
+							posts.push({
+								'img_url' => img_src,
+								'user_id' => user_id,
+								'post_url' => post_url,
+								'date' => post_time,
+							})
 						end
 					end
 					@@logger.debug "posts.last['date'] = #{posts.last['date']}" if posts.last
@@ -167,11 +169,13 @@ module Spider
 				end
 				if posts.count == 0
 					no_posts_count += 1
-					if no_posts_count == 10
-						@@logger.info 'Posts not found 10 times in sequence. Completing the crowl of location'
+					if no_posts_count == 5
+						@@logger.info 'Posts not found 5 times in sequence. Completing the crowl of location'
 						flag = false
 					end
 				end
+				posts = posts.select { |post| post['date'].strftime('%d').to_i == yesterday_day_number }
+				all_posts_count += posts.count
 				begin
 					insert_in_db posts, location_row[:id]
 				rescue Sequel::DatabaseDisconnectError
