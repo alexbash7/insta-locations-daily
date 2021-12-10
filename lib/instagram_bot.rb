@@ -174,10 +174,10 @@ module Spider
 				posts = posts.select { |post| post['date'].strftime('%d').to_i == yesterday_day_number }
 				all_posts_count += posts.count
 				begin
-					insert_in_db posts, location_row[:id]
+					insert_in_db posts, location_row[:locid]
 				rescue Sequel::DatabaseDisconnectError
 					Spider::DB.disconnect
-					insert_in_db posts, location_row[:id]
+					insert_in_db posts, location_row[:locid]
 				end
 				page += 1
 			end
