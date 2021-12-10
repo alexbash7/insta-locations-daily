@@ -118,7 +118,7 @@ module Spider
 			end
 			@@logger.debug "try to load location #{url}"
 			location_id = url.scan(/[0-9]+/).first
-			yesterday_day_number = Date.today.prev_day.strftime('%d').to_i
+			yesterday_day_number = Date.today.prev_day(2).strftime('%d').to_i
 			page = 0
 			no_posts_count = 0
 			all_posts_count = 0
@@ -148,17 +148,20 @@ module Spider
 							code = media_info['code']
 							post_url = "https://www.instagram.com/p/#{code}/"
 							taken_at = media_info['taken_at']
+							like_count = media_info['like_count']
 							post_time = Time.at(taken_at.to_i)
 							if post_time.strftime("%d").to_i < yesterday_day_number
 								flag = false
 								break
 							end
-							posts.push({
-								'img_url' => img_src,
-								'user_id' => user_id,
-								'post_url' => post_url,
-								'date' => post_time,
-							})
+							if like_count.to_i > 50
+								posts.push({
+									'img_url' => img_src,
+									'user_id' => user_id,
+									'post_url' => post_url,
+									'date' => post_time,
+								})
+							end
 						end
 					end
 					@@logger.debug "posts.last['date'] = #{posts.last['date']}" if posts.last
